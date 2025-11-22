@@ -1,0 +1,8 @@
+{
+  "name": "Diagnosmart AI (Creat By Shekh Shabir)",
+  "description": "AI-powered pathology report analyzer created by Shekh Shabir. Scans reports, provides medical analysis, calculates health scores, and recommends doctors.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
