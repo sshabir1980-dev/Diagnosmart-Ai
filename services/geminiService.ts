@@ -2,10 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReportAnalysis } from "../types";
 
-const API_KEY = process.env.API_KEY || '';
-
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Initialize Gemini with process.env.API_KEY as per coding guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const analysisSchema = {
   type: Type.OBJECT,
@@ -53,6 +51,12 @@ const analysisSchema = {
 };
 
 export const analyzeReportImage = async (base64Image: string, mimeType: string): Promise<ReportAnalysis> => {
+  // Check for API Key first (using process.env.API_KEY)
+  if (!process.env.API_KEY) {
+    console.error("API Key is missing. Please check API_KEY in your environment variables.");
+    throw new Error("System Configuration Error: API Key missing.");
+  }
+
   try {
     const model = "gemini-2.5-flash";
     
@@ -103,10 +107,20 @@ export const analyzeReportImage = async (base64Image: string, mimeType: string):
 };
 
 export const suggestDoctors = async (pincode: string, specialist: string): Promise<any[]> => {
+  if (!process.env.API_KEY) return [];
+
   try {
+    // Strict prompt to prevent hallucination
     const prompt = `
-      Generate a JSON list of 3-4 realistic (but fictional or representative) ${specialist} doctors/clinics that might exist in a city with Indian Pincode ${pincode}.
-      Include: name, specialization, hospital/clinic name, address (with the pincode), approximate distance (e.g. 1.2 km), and rating (3.5-5.0).
+      You are a strict medical assistant. 
+      List 3 real doctors or clinics specializing in '${specialist}' specifically in the Indian Pincode area '${pincode}'.
+      
+      Rules:
+      1. ONLY return data if you have knowledge of doctors in this specific pincode or immediate vicinity.
+      2. If you do not have data for this pincode, return an EMPTY ARRAY []. DO NOT make up fake names.
+      3. Return format must be JSON.
+      
+      Include: name, specialization, hospital (clinic name), address, distance (estimated), rating.
     `;
 
     const response = await ai.models.generateContent({
